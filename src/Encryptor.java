@@ -52,7 +52,7 @@ public class Encryptor {
     public void addToMatrix(String inputLine) {
 
         if(inputLine.length() < 32) {
-            int diff = 32 - (int)inputLine.length();
+            int diff = 32 - inputLine.length();
             String tempPad = "0";
             for(int i = 0; i < diff; i++) {
                 tempPad = tempPad + "0";
@@ -86,13 +86,11 @@ public class Encryptor {
             {
                 int xVal = plainTextMatrix[x][y]>>4;
                 int yVal = plainTextMatrix[x][y]>>5;
-                System.out.println("x: "+xVal+" y: "+yVal);
+                //System.out.println("x: "+xVal+" y: "+yVal);
                 plainTextMatrix[x][y] = Tables.S_BOX[xVal][yVal];
-                System.out.println("Replaced :"+plainTextMatrix[x][y]);
+                //System.out.println("Replaced :"+plainTextMatrix[x][y]);
             }
-
         }
-
     }
 
     public void shiftRows()
