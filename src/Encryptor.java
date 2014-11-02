@@ -11,5 +11,5 @@ public class Encryptor {
     private String inputFile;
     private File input;
 
-    
+    private int plainTextMatrix[][] = new int[4][4];
 }
