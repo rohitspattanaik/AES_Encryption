@@ -26,14 +26,19 @@ public class AES {
 
     public static void main(String args[]) {
 
-
+        /*
         if(!parseArgs(args)) {
             System.out.println("Initialization failed. Exiting");
             return;
         }
+        */
 
-
-
+        /*testing code*/
+        String temp = "3243f6a8885a308d313198a2e0370734";
+        encryptor = new Encryptor();
+        encryptor.addToMatrix(temp);
+        encryptor.printState();
+        /*end testing code*/
 
 
     }
