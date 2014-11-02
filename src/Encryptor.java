@@ -78,6 +78,42 @@ public class Encryptor {
         }
     }
 
+    public void subBytes()
+    {
+        for(int x=0;x<plainTextMatrix.length;x++)
+        {
+            for(int y=0;y<plainTextMatrix[0].length;y++)
+            {
+                int xVal = plainTextMatrix[x][y]>>4;
+                int yVal = plainTextMatrix[x][y]>>5;
+                System.out.println("x: "+xVal+" y: "+yVal);
+                plainTextMatrix[x][y] = Tables.S_BOX[xVal][yVal];
+                System.out.println("Replaced :"+plainTextMatrix[x][y]);
+            }
+
+        }
+
+    }
+
+    public void shiftRows()
+    {
+
+        for(int x=0;x<plainTextMatrix.length;x++)
+        {
+            for(int n =0;n<x;n++)
+            {
+                int temp = plainTextMatrix[x][plainTextMatrix[0].length-1];
+                for(int y =plainTextMatrix[0].length-1;y>0;y--)
+                {
+                    plainTextMatrix[x][y] = plainTextMatrix [x][y-1];
+
+                }
+                plainTextMatrix[x][0]= temp;
+            }
+        }
+
+    }
+
     public boolean addFiles(String inputFile, String keyFile) {
         input = inputFile;
         key = keyFile;
