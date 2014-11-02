@@ -26,10 +26,12 @@ public class AES {
 
     public static void main(String args[]) {
 
+
         if(!parseArgs(args)) {
             System.out.println("Initialization failed. Exiting");
             return;
         }
+
 
 
 
