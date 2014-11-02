@@ -10,4 +10,6 @@ public class Encryptor {
 
     private String inputFile;
     private File input;
+
+    
 }
