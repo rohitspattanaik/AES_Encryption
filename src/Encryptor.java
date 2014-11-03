@@ -84,8 +84,16 @@ public class Encryptor {
         {
             for(int y=0;y<plainTextMatrix[0].length;y++)
             {
-                int xVal = plainTextMatrix[x][y]>>4;
-                int yVal = plainTextMatrix[x][y]>>5;
+                //System.out.println(Integer.parseInt(String.valueOf(plainTextMatrix[x][y]), 16));
+                //int temp = Integer.parseInt(Integer.toHexString(plainTextMatrix[x][y]));
+                //System.out.println(plainTextMatrix[x][y]);
+                String temp = Integer.toHexString(plainTextMatrix[x][y]);
+                //System.out.println(temp);
+                if(temp.length() != 2) {
+                    temp = "0" + temp;
+                }
+                int xVal = Integer.parseInt(temp.substring(0, 1), 16);
+                int yVal = Integer.parseInt(temp.substring(1), 16);
                 //System.out.println("x: "+xVal+" y: "+yVal);
                 plainTextMatrix[x][y] = Tables.S_BOX[xVal][yVal];
                 //System.out.println("Replaced :"+plainTextMatrix[x][y]);
@@ -115,10 +123,7 @@ public class Encryptor {
     public boolean addFiles(String inputFile, String keyFile) {
         input = inputFile;
         key = keyFile;
-        if(!readFiles()) {
-           return false;
-        }
-        return true;
+        return readFiles();
     }
 
     public void encrypt() {
