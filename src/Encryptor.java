@@ -118,6 +118,7 @@ public class Encryptor {
             }
         }
 */
+        /*
         for(int row = 1; row < plainTextMatrix.length; row++) {
             for(int column = 0; column < plainTextMatrix.length; column++) {
                 int shiftTo = column == 0 ? plainTextMatrix.length - 1 : column - 1;
@@ -125,7 +126,21 @@ public class Encryptor {
                 plainTextMatrix[row][shiftTo] = plainTextMatrix[row][column];
                 plainTextMatrix[row][column] = temp;
             }
+        }*/
+        for(int row = 0; row < plainTextMatrix.length; row++) {
+            for(int count = 0; count < row; count++) {
+                rotate(row);
+            }
         }
+    }
+
+    private void rotate(int row) {
+        int temp = plainTextMatrix[row][0];
+        int col = 1;
+        while(col < plainTextMatrix.length) {
+            plainTextMatrix[row][col - 1] = plainTextMatrix[row][col++];
+        }
+        plainTextMatrix[row][col - 1] = temp;
     }
 
     public boolean addFiles(String inputFile, String keyFile) {
