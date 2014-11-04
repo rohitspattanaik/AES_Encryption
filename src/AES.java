@@ -48,7 +48,24 @@ public class AES {
 
 
     }
-
+public void encrypt()
+{
+	for (int i = 0; i < 10; i++) {
+		encryptor.subBytes();
+		encryptor.shiftRows();
+	 //   encryptor.mixColumns();	
+    }
+   
+}
+public void decrypt()
+{
+	for (int i = 0; i < 10; i++) {
+		decryptor.subBytes();
+		decryptor.shiftRows();
+	   // decryptor.mixColumns();	
+    }
+   
+}
     private static boolean parseArgs(String args[]) {
         /*
          * Expecting the following structure from the command line:
