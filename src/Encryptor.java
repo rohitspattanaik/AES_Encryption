@@ -66,7 +66,7 @@ public class Encryptor {
 
         assert inputLine.length() == 32;
 
-        //The pattern to add elements in column major
+        //Adding elements by column
         for(int y = 0; y < 4; y++) {
             for(int x = 0; x < 4; x++) {
                 plainTextMatrix[x][y] = Integer.parseInt(inputLine.substring(0,2), 16);
@@ -103,30 +103,6 @@ public class Encryptor {
 
     public void shiftRows()
     {
-/*
-        for(int x=0;x<plainTextMatrix.length;x++)
-        {
-            for(int n =0;n<x;n++)
-            {
-                int temp = plainTextMatrix[x][plainTextMatrix[0].length-1];
-                for(int y =plainTextMatrix[0].length-1;y>0;y--)
-                {
-                    plainTextMatrix[x][y] = plainTextMatrix [x][y-1];
-
-                }
-                plainTextMatrix[x][0]= temp;
-            }
-        }
-*/
-        /*
-        for(int row = 1; row < plainTextMatrix.length; row++) {
-            for(int column = 0; column < plainTextMatrix.length; column++) {
-                int shiftTo = column == 0 ? plainTextMatrix.length - 1 : column - 1;
-                int temp = plainTextMatrix[row][shiftTo];
-                plainTextMatrix[row][shiftTo] = plainTextMatrix[row][column];
-                plainTextMatrix[row][column] = temp;
-            }
-        }*/
         for(int row = 0; row < plainTextMatrix.length; row++) {
             for(int count = 0; count < row; count++) {
                 rotate(row);
@@ -141,6 +117,15 @@ public class Encryptor {
             plainTextMatrix[row][col - 1] = plainTextMatrix[row][col++];
         }
         plainTextMatrix[row][col - 1] = temp;
+    }
+
+    public void mixColumns() {
+        for(int col = 0; col < plainTextMatrix.length; col++) {
+            plainTextMatrix[0][col] = (2*plainTextMatrix[0][col]) ^ (3*plainTextMatrix[1][col]) ^ (plainTextMatrix[2][col]) ^ (plainTextMatrix[3][col]);
+            plainTextMatrix[1][col] = (plainTextMatrix[0][col]) ^ (2*plainTextMatrix[1][col]) ^ (3*plainTextMatrix[2][col]) ^ (plainTextMatrix[3][col]);
+            plainTextMatrix[2][col] = (plainTextMatrix[0][col]) ^ (plainTextMatrix[1][col]) ^ (2*plainTextMatrix[2][col]) ^ (3*plainTextMatrix[3][col]);
+            plainTextMatrix[3][col] = (3*plainTextMatrix[0][col]) ^ (plainTextMatrix[1][col]) ^ (plainTextMatrix[2][col]) ^ (2*plainTextMatrix[3][col]);
+        }
     }
 
     public boolean addFiles(String inputFile, String keyFile) {
