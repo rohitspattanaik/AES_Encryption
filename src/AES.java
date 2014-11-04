@@ -34,9 +34,15 @@ public class AES {
         */
 
         /*testing code*/
-        String temp = "3243f6a8885a308d313198a2e0370734";
+        String temp = "193de3bea0f4e22b9ac68d2ae9f84808";
         encryptor = new Encryptor();
         encryptor.addToMatrix(temp);
+        encryptor.printState();
+        System.out.println();
+        encryptor.subBytes();
+        encryptor.printState();
+        encryptor.shiftRows();
+        System.out.println();
         encryptor.printState();
         /*end testing code*/
 
