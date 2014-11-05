@@ -26,12 +26,12 @@ public class AES {
 
     public static void main(String args[]) {
 
-        /*
+/*
         if(!parseArgs(args)) {
             System.out.println("Initialization failed. Exiting");
             return;
         }
-        */
+*/
 
         /*testing code*/
         String temp = "193de3bea0f4e22b9ac68d2ae9f84808";
@@ -44,9 +44,9 @@ public class AES {
         encryptor.shiftRows();
         System.out.println();
         encryptor.printState();
-        //encryptor.mixColumns();
+        encryptor.mixColumns();
         System.out.println();
-        //encryptor.printState();
+        encryptor.printState();
         /*end testing code*/
 
 

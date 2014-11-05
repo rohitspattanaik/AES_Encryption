@@ -2,9 +2,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.Scanner;
 
-/**
- * Created by rsp615 on 10/28/14.
- */
+
 public class Encryptor {
 
     private File keyFile;
@@ -14,13 +12,17 @@ public class Encryptor {
     private String input;
     private Scanner scanner;
 
-    private char plainTextMatrix[][] = new char[4][4]; //make private
-    private char keyMatrix[][] = new char[4][4];
+    private int plainTextMatrix[][] = new int[4][4]; //make private
+    private int keyMatrix[][] = new int[4][4];
 
     public void printState() {
         for(int x = 0; x < 4; x++) {
             for(int y = 0; y < 4; y++) {
-                System.out.print(Integer.toHexString(plainTextMatrix[x][y]) + " ");
+                String temp = Integer.toHexString(plainTextMatrix[x][y]);
+                if(temp.length() < 2) {
+                    temp = "0" + temp;
+                }
+                System.out.print(temp + " ");
             }
             System.out.println();
         }
@@ -78,27 +80,32 @@ public class Encryptor {
         }
     }
 
-    public void subBytes()
-    {
-        for(int x=0;x<plainTextMatrix.length;x++)
-        {
-            for(int y=0;y<plainTextMatrix[0].length;y++)
-            {
-                //System.out.println(Integer.parseInt(String.valueOf(plainTextMatrix[x][y]), 16));
-                //int temp = Integer.parseInt(Integer.toHexString(plainTextMatrix[x][y]));
-                //System.out.println(plainTextMatrix[x][y]);
-                String temp = Integer.toHexString(plainTextMatrix[x][y]);
-                //System.out.println(temp);
-                if(temp.length() != 2) {
-                    temp = "0" + temp;
-                }
-                int xVal = Integer.parseInt(temp.substring(0, 1), 16);
-                int yVal = Integer.parseInt(temp.substring(1), 16);
-                //System.out.println("x: "+xVal+" y: "+yVal);
-                plainTextMatrix[x][y] = Tables.S_BOX[xVal][yVal];
-                //System.out.println("Replaced :"+plainTextMatrix[x][y]);
-            }
+    public void subBytes() {
+        for(int col = 0; col < plainTextMatrix.length; col++) {
+            subBytesAux(col, plainTextMatrix);
         }
+    }
+
+    /*
+     * subBytesAux provides the opportunity to reuse code while producing roundkeys
+     */
+    private void subBytesAux(int y, int[][] matrix) {
+        for(int x=0;x<matrix[0].length;x++) {
+            //System.out.println(Integer.parseInt(String.valueOf(plainTextMatrix[x][y]), 16));
+            //int temp = Integer.parseInt(Integer.toHexString(plainTextMatrix[x][y]));
+            //System.out.println(plainTextMatrix[x][y]);
+            String temp = Integer.toHexString(matrix[x][y]);
+            //System.out.println(temp);
+            if(temp.length() != 2) {
+                temp = "0" + temp;
+            }
+            int xVal = Integer.parseInt(temp.substring(0, 1), 16);
+            int yVal = Integer.parseInt(temp.substring(1), 16);
+            //System.out.println("x: "+xVal+" y: "+yVal);
+            matrix[x][y] = Tables.S_BOX[xVal][yVal];
+                //System.out.println("Replaced :"+plainTextMatrix[x][y]);
+        }
+
     }
 
     public void shiftRows()
@@ -111,7 +118,7 @@ public class Encryptor {
     }
 
     private void rotate(int row) {
-        char temp = plainTextMatrix[row][0];
+        int temp = plainTextMatrix[row][0];
         int col = 1;
         while(col < plainTextMatrix.length) {
             plainTextMatrix[row][col - 1] = plainTextMatrix[row][col++];
@@ -128,6 +135,43 @@ public class Encryptor {
         }
     }
 */
+    private byte mul (int a, int b) {
+        int inda = (a < 0) ? (a + 256) : a;
+        int indb = (b < 0) ? (b + 256) : b;
+
+        if ( (a != 0) && (b != 0) ) {
+            int index = (Tables.LogTable[inda] + Tables.LogTable[indb]);
+            byte val = (byte)(Tables.AlogTable[ index % 255 ] );
+            return val;
+        }
+        else
+            return 0;
+}
+
+    public void mixColumns() {
+        for(int col = 0; col < plainTextMatrix.length; col++) {
+            mixColumnsAux(col);
+        }
+    }
+
+    public void mixColumnsAux (int c) {
+        // This is another alternate version of mixColumn, using the
+        // logtables to do the computation.
+
+        int a[] = new int[4];
+
+        // note that a is just a copy of st[.][c]
+        for (int i = 0; i < 4; i++)
+            a[i] = (plainTextMatrix[i][c] & 0xFF);
+
+        // This is exactly the same as mixColumns1, if
+        // the mul columns somehow match the b columns there.
+        plainTextMatrix[0][c] = ((mul(2,a[0]) ^ a[2] ^ a[3] ^ mul(3,a[1]))) & 0xFF;
+        plainTextMatrix[1][c] = ((mul(2,a[1]) ^ a[3] ^ a[0] ^ mul(3,a[2]))) & 0xFF;
+        plainTextMatrix[2][c] = ((mul(2,a[2]) ^ a[0] ^ a[1] ^ mul(3,a[3]))) & 0xFF;
+        plainTextMatrix[3][c] = ((mul(2,a[3]) ^ a[1] ^ a[2] ^ mul(3,a[0]))) & 0xFF;
+    }
+
     public boolean addFiles(String inputFile, String keyFile) {
         input = inputFile;
         key = keyFile;
