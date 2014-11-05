@@ -44,9 +44,9 @@ public class AES {
         encryptor.shiftRows();
         System.out.println();
         encryptor.printState();
-        encryptor.mixColumns();
+        //encryptor.mixColumns();
         System.out.println();
-        encryptor.printState();
+        //encryptor.printState();
         /*end testing code*/
 
 

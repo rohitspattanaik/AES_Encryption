@@ -14,8 +14,8 @@ public class Encryptor {
     private String input;
     private Scanner scanner;
 
-    private int plainTextMatrix[][] = new int[4][4]; //make private
-    private int keyMatrix[][] = new int[4][4];
+    private char plainTextMatrix[][] = new char[4][4]; //make private
+    private char keyMatrix[][] = new char[4][4];
 
     public void printState() {
         for(int x = 0; x < 4; x++) {
@@ -69,7 +69,7 @@ public class Encryptor {
         //Adding elements by column
         for(int y = 0; y < 4; y++) {
             for(int x = 0; x < 4; x++) {
-                plainTextMatrix[x][y] = Integer.parseInt(inputLine.substring(0,2), 16);
+                plainTextMatrix[x][y] = (char)Integer.parseInt(inputLine.substring(0,2), 16);
                 if(inputLine.length() != 0) {
                     inputLine = inputLine.substring(2);
                 }
@@ -111,14 +111,14 @@ public class Encryptor {
     }
 
     private void rotate(int row) {
-        int temp = plainTextMatrix[row][0];
+        char temp = plainTextMatrix[row][0];
         int col = 1;
         while(col < plainTextMatrix.length) {
             plainTextMatrix[row][col - 1] = plainTextMatrix[row][col++];
         }
         plainTextMatrix[row][col - 1] = temp;
     }
-
+/*
     public void mixColumns() {
         for(int col = 0; col < plainTextMatrix.length; col++) {
             plainTextMatrix[0][col] = (2*plainTextMatrix[0][col]) ^ (3*plainTextMatrix[1][col]) ^ (plainTextMatrix[2][col]) ^ (plainTextMatrix[3][col]);
@@ -127,7 +127,7 @@ public class Encryptor {
             plainTextMatrix[3][col] = (3*plainTextMatrix[0][col]) ^ (plainTextMatrix[1][col]) ^ (plainTextMatrix[2][col]) ^ (2*plainTextMatrix[3][col]);
         }
     }
-
+*/
     public boolean addFiles(String inputFile, String keyFile) {
         input = inputFile;
         key = keyFile;
