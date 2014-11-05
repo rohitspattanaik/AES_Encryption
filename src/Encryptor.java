@@ -249,7 +249,7 @@ public class Encryptor {
             }
             else {
                 for(row = 0; row < 4; row++) {
-                    roundKeyMatrix[row][col] = roundKeyMatrix[row][col - 4] ^ roundKeyMatrix[row][col - (col/4)];
+                    roundKeyMatrix[row][col] = roundKeyMatrix[row][col - 4] ^ roundKeyMatrix[row][col - 1];
                 }
 
             }
