@@ -24,6 +24,8 @@ public class AES {
     private static Decryptor decryptor;
 
 
+
+
     public static void main(String args[]) {
 
 /*
@@ -36,7 +38,7 @@ public class AES {
         /*testing code*/
         String temp = "193de3bea0f4e22b9ac68d2ae9f84808";
         encryptor = new Encryptor();
-        encryptor.addToMatrix(temp);
+        encryptor.addToTextMatrix(temp);
         encryptor.printState();
         System.out.println();
         encryptor.subBytes();
@@ -47,6 +49,13 @@ public class AES {
         encryptor.mixColumns();
         System.out.println();
         encryptor.printState();
+        String key = "2b7e151628aed2a6abf7158809cf4f3c";
+        encryptor.addToKeyMatrix(key);
+        System.out.println();
+        encryptor.printKey();
+        encryptor.setRoundKeys();
+        System.out.println();
+        encryptor.printRoundKeys();
         /*end testing code*/
 
 
