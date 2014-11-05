@@ -14,6 +14,7 @@ public class Encryptor {
 
     private int plainTextMatrix[][] = new int[4][4]; //make private
     private int keyMatrix[][] = new int[4][4];
+    private int roundKeyMatrix[][] = new int[4][44]; //collection of roundKeys for all rounds.
 
     public void printState() {
         for(int x = 0; x < 4; x++) {
@@ -31,7 +32,24 @@ public class Encryptor {
     public void printKey() {
         for(int x = 0; x < 4; x++) {
             for(int y = 0; y < 4; y++) {
-                System.out.print(Integer.toHexString(keyMatrix[x][y]) + " ");
+                String temp = Integer.toHexString(keyMatrix[x][y]);
+                if(temp.length() < 2) {
+                    temp = "0" + temp;
+                }
+                System.out.print(temp + " ");
+            }
+            System.out.println();
+        }
+    }
+
+    public void printRoundKeys() {
+        for(int x = 0; x < 4; x++) {
+            for(int y = 0; y < 44; y++) {
+                String temp = Integer.toHexString(roundKeyMatrix[x][y]);
+                if(temp.length() < 2) {
+                    temp = "0" + temp;
+                }
+                System.out.print(temp + " ");
             }
             System.out.println();
         }
@@ -108,33 +126,32 @@ public class Encryptor {
 
     }
 
-    public void shiftRows()
-    {
+    public void shiftRows() {
         for(int row = 0; row < plainTextMatrix.length; row++) {
             for(int count = 0; count < row; count++) {
-                rotate(row);
+                rotateRow(row, plainTextMatrix);
             }
         }
     }
 
-    private void rotate(int row) {
-        int temp = plainTextMatrix[row][0];
+    private void rotateRow(int row, int[][] matrix) {
+        int temp = matrix[row][0];
         int col = 1;
-        while(col < plainTextMatrix.length) {
-            plainTextMatrix[row][col - 1] = plainTextMatrix[row][col++];
+        while(col < matrix.length) {
+            matrix[row][col - 1] = matrix[row][col++];
         }
-        plainTextMatrix[row][col - 1] = temp;
+        matrix[row][col - 1] = temp;
     }
-/*
-    public void mixColumns() {
-        for(int col = 0; col < plainTextMatrix.length; col++) {
-            plainTextMatrix[0][col] = (2*plainTextMatrix[0][col]) ^ (3*plainTextMatrix[1][col]) ^ (plainTextMatrix[2][col]) ^ (plainTextMatrix[3][col]);
-            plainTextMatrix[1][col] = (plainTextMatrix[0][col]) ^ (2*plainTextMatrix[1][col]) ^ (3*plainTextMatrix[2][col]) ^ (plainTextMatrix[3][col]);
-            plainTextMatrix[2][col] = (plainTextMatrix[0][col]) ^ (plainTextMatrix[1][col]) ^ (2*plainTextMatrix[2][col]) ^ (3*plainTextMatrix[3][col]);
-            plainTextMatrix[3][col] = (3*plainTextMatrix[0][col]) ^ (plainTextMatrix[1][col]) ^ (plainTextMatrix[2][col]) ^ (2*plainTextMatrix[3][col]);
+
+    private void rotateCol(int col, int[][] matrix) {
+        int temp = matrix[0][col];
+        int row = 1;
+        while(row < matrix.length) {
+            matrix[row - 1][col] = matrix[row++][col];
         }
+        matrix[row - 1][col] = temp;
     }
-*/
+
     private byte mul (int a, int b) {
         int inda = (a < 0) ? (a + 256) : a;
         int indb = (b < 0) ? (b + 256) : b;
@@ -155,21 +172,22 @@ public class Encryptor {
     }
 
     public void mixColumnsAux (int c) {
-        // This is another alternate version of mixColumn, using the
-        // logtables to do the computation.
 
         int a[] = new int[4];
 
-        // note that a is just a copy of st[.][c]
+        //a is a copy of plainTextMatrix
         for (int i = 0; i < 4; i++)
             a[i] = (plainTextMatrix[i][c] & 0xFF);
 
-        // This is exactly the same as mixColumns1, if
-        // the mul columns somehow match the b columns there.
         plainTextMatrix[0][c] = ((mul(2,a[0]) ^ a[2] ^ a[3] ^ mul(3,a[1]))) & 0xFF;
         plainTextMatrix[1][c] = ((mul(2,a[1]) ^ a[3] ^ a[0] ^ mul(3,a[2]))) & 0xFF;
         plainTextMatrix[2][c] = ((mul(2,a[2]) ^ a[0] ^ a[1] ^ mul(3,a[3]))) & 0xFF;
         plainTextMatrix[3][c] = ((mul(2,a[3]) ^ a[1] ^ a[2] ^ mul(3,a[0]))) & 0xFF;
+    }
+
+    public void setRoundKeys() {
+        int row, col;
+        for(row)
     }
 
     public boolean addFiles(String inputFile, String keyFile) {
