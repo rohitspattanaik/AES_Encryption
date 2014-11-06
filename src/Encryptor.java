@@ -4,11 +4,9 @@ import java.util.Scanner;
 
 public class Encryptor {
 
-    private File keyFile;
     private String key;
     private Scanner keyScanner;
 
-    private File inputFile;
     private String input;
     private Scanner fileScanner;
 
@@ -16,12 +14,13 @@ public class Encryptor {
     private String output;
     private BufferedWriter outputWriter;
 
-    private int plainTextMatrix[][] = new int[4][4]; //make private
+    private int plainTextMatrix[][] = new int[4][4];
     private int keyMatrix[][] = new int[4][4];
     private int roundKeyMatrix[][] = new int[4][44]; //collection of roundKeys for all rounds.
 
     private static final int nk = 4; //constant for 128 bit implementation
 
+    /*Following print methods useful for debugging and keeping track of progress of encryption*/
     public void printState() {
         for(int x = 0; x < 4; x++) {
             for(int y = 0; y < 4; y++) {
@@ -61,9 +60,10 @@ public class Encryptor {
         }
     }
 
+    /*Opens files and returns success if scanners and writer opened*/
     private boolean readFiles() {
-        keyFile = new File(key);
-        inputFile = new File(input);
+        File keyFile = new File(key);
+        File inputFile = new File(input);
         outputFile = new File(output);
 
         try {
@@ -72,6 +72,7 @@ public class Encryptor {
         }
         catch(FileNotFoundException e) {
             System.out.println("Error: Input/Key File Not Found");
+            outputFile.delete();
             return false;
         }
 
@@ -80,10 +81,13 @@ public class Encryptor {
         }
         catch(IOException e) {
             System.out.println("Error: Unable to create output writer");
+            outputFile.delete();
+            return false;
         }
         return true;
     }
 
+    /*Converts matrix into a string following a column major pattern*/
     private String revertMatrix(int[][] matrix) {
         String text = "";
         for(int col = 0; col < matrix[0].length; col++) {
@@ -95,14 +99,15 @@ public class Encryptor {
                 text = text + temp;
             }
         }
+        text = text + "\n";
         return text;
     }
 
-
-    public void addToTextMatrix(String inputLine) {
+    /*Inserts a given line into plainTextMatrix by column*/
+    private void addToTextMatrix(String inputLine) {
         if(inputLine.length() < 32) {
             int diff = 32 - inputLine.length();
-            String tempPad = "0";
+            String tempPad = "";
             for(int i = 0; i < diff; i++) {
                 tempPad = tempPad + "0";
             }
@@ -110,10 +115,13 @@ public class Encryptor {
         }
 
         if(inputLine.length() > 32) {
-            inputLine = inputLine.substring(0, 31);
+            inputLine = inputLine.substring(0, 32);
         }
 
-        assert inputLine.length() == 32;
+        if(inputLine.length() != 32) {
+            outputFile.delete();
+            assert false; //Panic! Cannot continue if here
+        }
 
         //Adding elements by column
         for(int y = 0; y < 4; y++) {
@@ -126,21 +134,13 @@ public class Encryptor {
         }
     }
 
-    public void addToKeyMatrix(String inputLine) {
-        if(inputLine.length() < 32) {
-            int diff = 32 - inputLine.length();
-            String tempPad = "0";
-            for(int i = 0; i < diff; i++) {
-                tempPad = tempPad + "0";
-            }
-            inputLine = inputLine + tempPad;
+    /*Same as above except for keyMatrix*/
+    private void addToKeyMatrix(String inputLine) {
+        if(inputLine.length() != 32) {
+            outputFile.delete();
+            assert false; //Panic! Cannot continue if here
         }
 
-        if(inputLine.length() > 32) {
-            inputLine = inputLine.substring(0, 31);
-        }
-
-        assert inputLine.length() == 32;
 
         //Adding elements by column
         for(int y = 0; y < 4; y++) {
@@ -154,15 +154,14 @@ public class Encryptor {
         }
     }
 
-    public void subBytes() {
+    /*Substitutes elements in matrix using S_BOX in Tables*/
+    private void subBytes() {
         for(int col = 0; col < plainTextMatrix.length; col++) {
             subBytesAux(col, plainTextMatrix);
         }
     }
 
-    /*
-     * subBytesAux provides the opportunity to reuse code while producing roundkeys
-     */
+    /*subBytesAux provides the opportunity to reuse code while producing roundkeys*/
     private void subBytesAux(int y, int[][] matrix) {
         for(int x = 0; x < matrix.length; x++) {
             String temp = Integer.toHexString(matrix[x][y]);
@@ -176,7 +175,8 @@ public class Encryptor {
 
     }
 
-    public void shiftRows() {
+    /*Calls rotateRow for each column*/
+    private void shiftRows() {
         for(int row = 0; row < plainTextMatrix.length; row++) {
             for(int count = 0; count < row; count++) {
                 rotateRow(row, plainTextMatrix);
@@ -184,6 +184,7 @@ public class Encryptor {
         }
     }
 
+    /*Rotates a given row of the matrix to the left*/
     private void rotateRow(int row, int[][] matrix) {
         int temp = matrix[row][0];
         int col = 1;
@@ -193,6 +194,7 @@ public class Encryptor {
         matrix[row][col - 1] = temp;
     }
 
+    /*Rotates a given column of the matrix upwards*/
     private void rotateCol(int col, int[][] matrix) {
         int temp = matrix[0][col];
         int row = 1;
@@ -202,6 +204,7 @@ public class Encryptor {
         matrix[row - 1][col] = temp;
     }
 
+    /*Multiplication for mixColumns*/
     private byte mul (int a, int b) {
         int inda = (a < 0) ? (a + 256) : a;
         int indb = (b < 0) ? (b + 256) : b;
@@ -215,13 +218,13 @@ public class Encryptor {
             return 0;
 }
 
-    public void mixColumns() {
+    private void mixColumns() {
         for(int col = 0; col < plainTextMatrix.length; col++) {
             mixColumnsAux(col);
         }
     }
 
-    public void mixColumnsAux (int c) {
+    private void mixColumnsAux (int c) {
         int a[] = new int[4];
         //a[] is a copy of plainTextMatrix
         for (int i = 0; i < 4; i++)
@@ -233,7 +236,8 @@ public class Encryptor {
         plainTextMatrix[3][c] = ((mul(2,a[3]) ^ a[1] ^ a[2] ^ mul(3,a[0]))) & 0xFF;
     }
 
-    public void setRoundKeys() {
+    /*Calculates all roundkeys and populates the matrix*/
+    private void setRoundKeys() {
         int row, col;
         for(col = 0; col < 4; col++) {
             for(row = 0; row < 4; row++) {
@@ -261,7 +265,8 @@ public class Encryptor {
         }
     }
 
-    public void addRoundKey(int round) {
+    /*Adds appropriate roundkey based on round*/
+    private void addRoundKey(int round) {
         for(int col = 0; col < plainTextMatrix[0].length; col++) {
             for(int row = 0; row < plainTextMatrix.length; row++) {
                 plainTextMatrix[row][col] = plainTextMatrix[row][col] ^ roundKeyMatrix[row][(round * 4) + col];
@@ -269,6 +274,7 @@ public class Encryptor {
         }
     }
 
+    /*Stored file names and calls readFiles*/
     public boolean addFiles(String inputFile, String keyFile) {
         input = inputFile;
         output = inputFile + ".enc";
@@ -276,6 +282,7 @@ public class Encryptor {
         return readFiles();
     }
 
+    /*Method called to allow encryption*/
     public boolean encrypt() {
         String key = keyScanner.next();
 //        if(keyScanner.hasNextLine()) {
@@ -284,31 +291,16 @@ public class Encryptor {
 //        }
          if(key.length() != 32) {
             System.out.println("Error: Key is not 128 bits. Aborting Encryption");
+             return false;
          }
         addToKeyMatrix(key);
         setRoundKeys();
 
         while(fileScanner.hasNextLine()) {
             String plainText = fileScanner.nextLine();
-//            //If line less than 32 hex chars, pad with 0's
-//            if(plainText.length() < 32) {
-//                int diff = 32 - plainText.length();
-//                for(int i = 0; i < diff; i++) {
-//                    plainText = plainText + "0";
-//                }
-//            }
-//            //If line greater than 32 hex chars, take first 32
-//            if(plainText.length() > 32) {
-//                plainText = plainText.substring(0, 32);
-//            }
             addToTextMatrix(plainText);
 
-            //printState();
-            //System.out.println();
-
             addRoundKey(0);
-            //printState();
-            //System.out.println();
             for(int i = 1; i < 11; i++) {
                 subBytes();
                 shiftRows();
@@ -316,8 +308,6 @@ public class Encryptor {
                     mixColumns();
                 }
                 addRoundKey(i);
-                //printState();
-                //System.out.println();
             }
             try {
                 outputWriter.write(revertMatrix(plainTextMatrix));
