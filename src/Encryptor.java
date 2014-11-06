@@ -7,10 +7,14 @@ public class Encryptor {
 
     private File keyFile;
     private String key;
+    private Scanner keyScanner;
 
     private File inputFile;
     private String input;
-    private Scanner scanner;
+    private Scanner fileScanner;
+
+    private File outputFile;
+    private String output;
 
     private int plainTextMatrix[][] = new int[4][4]; //make private
     private int keyMatrix[][] = new int[4][4];
@@ -60,19 +64,21 @@ public class Encryptor {
     private boolean readFiles() {
         keyFile = new File(key);
         inputFile = new File(input);
+        outputFile = new File(output);
 
         try {
-            scanner = new Scanner(inputFile);
+            fileScanner = new Scanner(inputFile);
+            keyScanner = new Scanner(keyFile);
         }
         catch(FileNotFoundException e) {
-            System.out.println("Error: Input File Not Found");
+            System.out.println("Error: Input/Key File Not Found");
             return false;
         }
         return true;
     }
 
-    public void addToTextMatrix(String inputLine) {
 
+    public void addToTextMatrix(String inputLine) {
         if(inputLine.length() < 32) {
             int diff = 32 - inputLine.length();
             String tempPad = "0";
@@ -95,15 +101,11 @@ public class Encryptor {
                 if(inputLine.length() != 0) {
                     inputLine = inputLine.substring(2);
                 }
-
             }
         }
     }
 
     public void addToKeyMatrix(String inputLine) {
-
-        //System.out.println("entered function");
-
         if(inputLine.length() < 32) {
             int diff = 32 - inputLine.length();
             String tempPad = "0";
@@ -130,8 +132,6 @@ public class Encryptor {
             }
         }
     }
-
-
 
     public void subBytes() {
         for(int col = 0; col < plainTextMatrix.length; col++) {
@@ -252,13 +252,55 @@ public class Encryptor {
 
     public boolean addFiles(String inputFile, String keyFile) {
         input = inputFile;
+        output = inputFile + ".enc";
         key = keyFile;
         return readFiles();
     }
 
-    public void encrypt() {
+    public boolean encrypt() {
+        String key = keyScanner.next();
+        if(keyScanner.hasNextLine()) {
+            System.out.println("Error: More than one key found in key file. Aborting Encryption");
+                return false;
+        }
+         if(key.length() != 32) {
+            System.out.println("Error: Key is not 128 bits. Aborting Encryption");
+         }
+        addToKeyMatrix(key);
+        setRoundKeys();
 
+        while(fileScanner.hasNextLine()) {
+            String plainText = fileScanner.next();
+//            //If line less than 32 hex chars, pad with 0's
+//            if(plainText.length() < 32) {
+//                int diff = 32 - plainText.length();
+//                for(int i = 0; i < diff; i++) {
+//                    plainText = plainText + "0";
+//                }
+//            }
+//            //If line greater than 32 hex chars, take first 32
+//            if(plainText.length() > 32) {
+//                plainText = plainText.substring(0, 32);
+//            }
+            addToTextMatrix(plainText);
+
+            addRoundKey(0);
+            for(int i = 1; i < 11; i++) {
+                subBytes();
+                shiftRows();
+                if(i != 10) {
+                    mixColumns();
+                }
+                addRoundKey(i);
+            }
+        }
+
+        keyScanner.close();
+        fileScanner.close();
+        
+        return true;
     }
+
 
 
 }
