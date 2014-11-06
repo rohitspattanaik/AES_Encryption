@@ -102,6 +102,8 @@ public class Encryptor {
 
     public void addToKeyMatrix(String inputLine) {
 
+        //System.out.println("entered function");
+
         if(inputLine.length() < 32) {
             int diff = 32 - inputLine.length();
             String tempPad = "0";
@@ -142,20 +144,13 @@ public class Encryptor {
      */
     private void subBytesAux(int y, int[][] matrix) {
         for(int x = 0; x < matrix.length; x++) {
-            //System.out.println("here");
-            //System.out.println(Integer.parseInt(String.valueOf(plainTextMatrix[x][y]), 16));
-            //int temp = Integer.parseInt(Integer.toHexString(plainTextMatrix[x][y]));
-            //System.out.println(plainTextMatrix[x][y]);
             String temp = Integer.toHexString(matrix[x][y]);
-            //System.out.println(temp);
             if(temp.length() != 2) {
                 temp = "0" + temp;
             }
             int xVal = Integer.parseInt(temp.substring(0, 1), 16);
             int yVal = Integer.parseInt(temp.substring(1), 16);
-            //System.out.println("x: "+xVal+" y: "+yVal);
             matrix[x][y] = Tables.S_BOX[xVal][yVal];
-                //System.out.println("Replaced :"+matrix[x][y]);
         }
 
     }
@@ -209,7 +204,7 @@ public class Encryptor {
 
         int a[] = new int[4];
 
-        //a is a copy of plainTextMatrix
+        //a[] is a copy of plainTextMatrix
         for (int i = 0; i < 4; i++)
             a[i] = (plainTextMatrix[i][c] & 0xFF);
 
@@ -226,32 +221,31 @@ public class Encryptor {
                 roundKeyMatrix[row][col] = keyMatrix[row][col];
             }
         }
-        //System.out.println(col);
         for(; col < roundKeyMatrix[0].length; col++) {
-            //System.out.println("col : " + col);
             if(col % 4 == 0) {
                 for(row = 0; row < 4; row++) {
                     roundKeyMatrix[row][col] = roundKeyMatrix[row][col - 1];
                 }
                 rotateCol(col, roundKeyMatrix);
-                //System.out.println();
-                //printRoundKeys();
                 subBytesAux(col, roundKeyMatrix);
-                //System.out.println();
-                //printRoundKeys();
-                //System.out.println("\n" + (Tables.RCON[col/nk]) + "\n");
                 int[] rcon = {(Tables.RCON[col/nk]), 0x0, 0x0, 0x0};
                 for(row = 0; row < 4; row++) {
                     roundKeyMatrix[row][col] = roundKeyMatrix[row][col - 4] ^ roundKeyMatrix[row][col] ^ rcon[row];
                 }
-                //System.out.println();
-                //printRoundKeys();
             }
             else {
                 for(row = 0; row < 4; row++) {
                     roundKeyMatrix[row][col] = roundKeyMatrix[row][col - 4] ^ roundKeyMatrix[row][col - 1];
                 }
 
+            }
+        }
+    }
+
+    public void addRoundKey(int round) {
+        for(int col = 0; col < plainTextMatrix[0].length; col++) {
+            for(int row = 0; row < plainTextMatrix.length; row++) {
+                plainTextMatrix[row][col] = plainTextMatrix[row][col] ^ roundKeyMatrix[row][(round * 4) + col];
             }
         }
     }
