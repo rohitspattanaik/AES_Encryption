@@ -28,22 +28,28 @@ public class AES {
 
     public static void main(String args[]) {
 
-
         if(!parseArgs(args)) {
             System.out.println("Initialization failed. Exiting");
             return;
         }
-        encryptor = new Encryptor();
-        encryptor.addFiles(inputFile,keyFile);
+        if(flag.equals("e")) {
+            System.out.println("Encrypting");
+            encryptor = new Encryptor();
+            encryptor.addFiles(inputFile,keyFile);
+            if(!encryptor.encrypt()) {
+                System.out.println("Encryption failed");
+            }
+        }
+
 
         /*testing code*/
         //String temp = "193de3bea0f4e22b9ac68d2ae9f84808";
 
-        String key = "2b7e151628aed2a6abf7158809cf4f3c";
-        String temp = "3243f6a8885a308d313198a2e0370734";
-        encryptor.addToKeyMatrix(key);
-        encryptor.addToTextMatrix(temp);
-        encryptor.encrypt();
+        //String key = "2b7e151628aed2a6abf7158809cf4f3c";
+        //String temp = "3243f6a8885a308d313198a2e0370734";
+        //encryptor.addToKeyMatrix(key);
+        //encryptor.addToTextMatrix(temp);
+        //encryptor.encrypt();
         /*
         System.out.println();
         encryptor.printKey();
@@ -70,7 +76,7 @@ public class AES {
         System.out.println();
         encryptor.printState();
 */
-        encryptor.printState();
+        //encryptor.printState();
         /*end testing code*/
 
 
@@ -104,7 +110,7 @@ public void decrypt()
         }
 
         flag = args[0].toLowerCase();
-        if(!flag.equals("e") || !flag.equals("d")) {
+        if(!flag.equals("e") && !flag.equals("d")) {
             System.out.println("Error- Encryption/Decryption flag incorrect");
             return false;
         }

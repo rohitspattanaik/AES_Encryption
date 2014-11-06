@@ -1,5 +1,4 @@
-import java.io.File;
-import java.io.FileNotFoundException;
+import java.io.*;
 import java.util.Scanner;
 
 
@@ -15,6 +14,7 @@ public class Encryptor {
 
     private File outputFile;
     private String output;
+    private BufferedWriter outputWriter;
 
     private int plainTextMatrix[][] = new int[4][4]; //make private
     private int keyMatrix[][] = new int[4][4];
@@ -74,7 +74,28 @@ public class Encryptor {
             System.out.println("Error: Input/Key File Not Found");
             return false;
         }
+
+        try {
+            outputWriter = new BufferedWriter(new FileWriter(outputFile));
+        }
+        catch(IOException e) {
+            System.out.println("Error: Unable to create output writer");
+        }
         return true;
+    }
+
+    private String revertMatrix(int[][] matrix) {
+        String text = "";
+        for(int col = 0; col < matrix[0].length; col++) {
+            for(int row = 0; row < matrix.length; row++) {
+                String temp = Integer.toHexString(matrix[row][col]);
+                if(temp.length() < 2) {
+                    temp = "0" + temp;
+                }
+                text = text + temp;
+            }
+        }
+        return text;
     }
 
 
@@ -201,9 +222,7 @@ public class Encryptor {
     }
 
     public void mixColumnsAux (int c) {
-
         int a[] = new int[4];
-
         //a[] is a copy of plainTextMatrix
         for (int i = 0; i < 4; i++)
             a[i] = (plainTextMatrix[i][c] & 0xFF);
@@ -259,10 +278,10 @@ public class Encryptor {
 
     public boolean encrypt() {
         String key = keyScanner.next();
-        if(keyScanner.hasNextLine()) {
-            System.out.println("Error: More than one key found in key file. Aborting Encryption");
-                return false;
-        }
+//        if(keyScanner.hasNextLine()) {
+//            System.out.println("Error: More than one key found in key file. Aborting Encryption");
+//            return false;
+//        }
          if(key.length() != 32) {
             System.out.println("Error: Key is not 128 bits. Aborting Encryption");
          }
@@ -270,7 +289,7 @@ public class Encryptor {
         setRoundKeys();
 
         while(fileScanner.hasNextLine()) {
-            String plainText = fileScanner.next();
+            String plainText = fileScanner.nextLine();
 //            //If line less than 32 hex chars, pad with 0's
 //            if(plainText.length() < 32) {
 //                int diff = 32 - plainText.length();
@@ -284,7 +303,12 @@ public class Encryptor {
 //            }
             addToTextMatrix(plainText);
 
+            //printState();
+            //System.out.println();
+
             addRoundKey(0);
+            //printState();
+            //System.out.println();
             for(int i = 1; i < 11; i++) {
                 subBytes();
                 shiftRows();
@@ -292,12 +316,29 @@ public class Encryptor {
                     mixColumns();
                 }
                 addRoundKey(i);
+                //printState();
+                //System.out.println();
+            }
+            try {
+                outputWriter.write(revertMatrix(plainTextMatrix));
+            } catch (IOException e) {
+                System.out.println("Error writing to file. Encryption Failed");
+                outputFile.delete();
+                return false;
             }
         }
 
+        try {
+            outputWriter.close();
+        }
+        catch (IOException e) {
+            System.out.println("Unable to close outputWriter. Deleting encrypted file");
+            outputFile.delete();
+            return false;
+        }
         keyScanner.close();
         fileScanner.close();
-        
+        System.out.println("Encryption Complete");
         return true;
     }
 
