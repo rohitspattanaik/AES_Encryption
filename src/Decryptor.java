@@ -53,14 +53,24 @@ public class Decryptor {
                 if(temp.length() < 2) {
                     temp = "0" + temp;
                 }
+                if(y%4 == 0) {
+                    System.out.print(" ");
+                }
                 System.out.print(temp + " ");
             }
             System.out.println();
         }
     }
 
+    public boolean addFiles(String inputFile, String keyFile) {
+        input = inputFile;
+        output = inputFile + ".dec";
+        key = keyFile;
+        return readFiles();
+    }
+
     /*Opens files and returns success if scanners and writer opened*/
-    private boolean readFiles() {
+    public boolean readFiles() {
         File keyFile = new File(key);
         File inputFile = new File(input);
         outputFile = new File(output);
@@ -87,11 +97,12 @@ public class Decryptor {
     }
 
     /*Converts matrix into a string following a column major pattern*/
-    private String revertMatrix(int[][] matrix) {
+    public String revertMatrix(int[][] matrix) {
         String text = "";
         for(int col = 0; col < matrix[0].length; col++) {
             for(int row = 0; row < matrix.length; row++) {
                 String temp = Integer.toHexString(matrix[row][col]);
+                temp = temp.toUpperCase();
                 if(temp.length() < 2) {
                     temp = "0" + temp;
                 }
@@ -103,7 +114,7 @@ public class Decryptor {
     }
 
     /*Inserts a given line into plainTextMatrix by column*/
-    private void addToCipherMatrix(String inputLine) {
+    public void addToCipherMatrix(String inputLine) {
         if(inputLine.length() < 32) {
             int diff = 32 - inputLine.length();
             String tempPad = "";
@@ -134,7 +145,7 @@ public class Decryptor {
     }
 
     /*Same as above except for keyMatrix*/
-    private void addToKeyMatrix(String inputLine) {
+    public void addToKeyMatrix(String inputLine) {
         if(inputLine.length() != 32) {
             outputFile.delete();
             assert false; //Panic! Cannot continue if here
@@ -154,7 +165,7 @@ public class Decryptor {
     }
 
     /*Rotates a given column of the matrix upwards*/
-    private void rotateCol(int col, int[][] matrix) {
+    public void rotateCol(int col, int[][] matrix) {
         int temp = matrix[0][col];
         int row = 1;
         while(row < matrix.length) {
@@ -164,7 +175,7 @@ public class Decryptor {
     }
 
     /*subBytesAux only used for roundkeys here. See inverseSubBytes otherwise*/
-    private void subBytesAux(int y, int[][] matrix) {
+    public void subBytesAux(int y, int[][] matrix) {
         for(int x = 0; x < matrix.length; x++) {
             String temp = Integer.toHexString(matrix[x][y]);
             if(temp.length() != 2) {
@@ -178,7 +189,7 @@ public class Decryptor {
     }
 
     /*Calculates all roundkeys and populates the matrix*/
-    private void setRoundKeys() {
+    public void setRoundKeys() {
         int row, col;
         for(col = 0; col < 4; col++) {
             for(row = 0; row < 4; row++) {
@@ -206,8 +217,18 @@ public class Decryptor {
         }
     }
 
+    /*Adds appropriate roundkey based on round*/
+    public void addRoundKey(int round) {
+        //round = 10 - round;
+        for(int col = 0; col < cipherTextMatrix[0].length; col++) {
+            for(int row = 0; row < cipherTextMatrix.length; row++) {
+                cipherTextMatrix[row][col] = cipherTextMatrix[row][col] ^ roundKeyMatrix[row][(round * 4) + col];
+            }
+        }
+    }
+
     /*Calls rotateRow for each column*/
-    private void inverseShiftRows() {
+    public void inverseShiftRows() {
         for(int row = 0; row < cipherTextMatrix.length; row++) {
             for(int count = 0; count < row; count++) {
                 inverseRotateRow(row, cipherTextMatrix);
@@ -216,12 +237,132 @@ public class Decryptor {
     }
 
     /*Rotates a given row of the matrix to the left*/
-    private void inverseRotateRow(int row, int[][] matrix) {
+    public void inverseRotateRow(int row, int[][] matrix) {
         int temp = matrix[row][matrix.length - 1];
         int col = matrix.length - 2;
-        while(col > 0) {
+        while(col >= 0) {
             matrix[row][col + 1] = matrix[row][col--];
         }
-        matrix[row][col] = temp;
+        matrix[row][col + 1] = temp;
     }
+
+    /*Substitutes elements in matrix using S_BOX in Tables*/
+    public void inverseSubBytes() {
+        for(int col = 0; col < cipherTextMatrix.length; col++) {
+            inverseSubBytesAux(col, cipherTextMatrix);
+        }
+    }
+
+    private void inverseSubBytesAux(int y, int[][] matrix) {
+        for(int x = 0; x < matrix.length; x++) {
+            String temp = Integer.toHexString(matrix[x][y]);
+            if(temp.length() != 2) {
+                temp = "0" + temp;
+            }
+            int xVal = Integer.parseInt(temp.substring(0, 1), 16);
+            int yVal = Integer.parseInt(temp.substring(1), 16);
+            matrix[x][y] = Tables.INVERSE_S_BOX[xVal][yVal];
+        }
+
+    }
+    /*Multiplication for mixColumns*/
+    private byte mul (int a, int b) {
+        int inda = (a < 0) ? (a + 256) : a;
+        int indb = (b < 0) ? (b + 256) : b;
+
+        if ( (a != 0) && (b != 0) ) {
+            int index = (Tables.LogTable[inda] + Tables.LogTable[indb]);
+            byte val = (byte)(Tables.AlogTable[ index % 255 ] );
+            return val;
+        }
+        else
+            return 0;
+    }
+
+    public void inverseMixColumns() {
+        for(int col = 0; col < cipherTextMatrix.length; col++) {
+            inverseMixColumnsAux(col);
+        }
+    }
+
+    public void inverseMixColumnsAux (int c) {
+        int a[] = new int[4];
+
+        // note that a is just a copy of st[.][c]
+        for (int i = 0; i < 4; i++)
+            a[i] = (cipherTextMatrix[i][c] & 0xFF);
+
+        cipherTextMatrix[0][c] = ((mul(0xE,a[0]) ^ mul(0xB,a[1]) ^ mul(0xD, a[2]) ^ mul(0x9,a[3]))) & 0xFF;
+        cipherTextMatrix[1][c] = ((mul(0xE,a[1]) ^ mul(0xB,a[2]) ^ mul(0xD, a[3]) ^ mul(0x9,a[0]))) & 0xFF;
+        cipherTextMatrix[2][c] = ((mul(0xE,a[2]) ^ mul(0xB,a[3]) ^ mul(0xD, a[0]) ^ mul(0x9,a[1]))) & 0xFF;
+        cipherTextMatrix[3][c] = ((mul(0xE,a[3]) ^ mul(0xB,a[0]) ^ mul(0xD, a[1]) ^ mul(0x9,a[2]))) & 0xFF;
+    }
+
+    public boolean decrypt() {
+        String key = keyScanner.next();
+//        if(keyScanner.hasNextLine()) {
+//            System.out.println("Error: More than one key found in key file. Aborting Encryption");
+//            return false;
+//        }
+        if(key.length() != 32) {
+            System.out.println("Error: Key is not 128 bits. Aborting Decryption");
+            return false;
+        }
+        addToKeyMatrix(key);
+        setRoundKeys();
+        //System.out.println("Round keys");
+        //printRoundKeys();
+
+        while(fileScanner.hasNextLine()) {
+            String cipherText = fileScanner.nextLine();
+            addToCipherMatrix(cipherText);
+
+            //System.out.println("Starting with");
+            //printState();
+
+
+            for(int i = 10; i > 0; i--) {
+                //System.out.println(i);
+                addRoundKey(i);
+                //System.out.println("After roundkey " + i);
+                //printState();
+                if(i != 10) {
+                    inverseMixColumns();
+                    //System.out.println("After iMix");
+                    //printState();
+                }
+                inverseShiftRows();
+                //System.out.println("After iShift");
+                //printState();
+                inverseSubBytes();
+                //System.out.println("After iSub");
+                //printState();
+            }
+            addRoundKey(0);
+            //System.out.println("After roundkey 0");
+            //printState();
+
+            try {
+                outputWriter.write(revertMatrix(cipherTextMatrix));
+            } catch (IOException e) {
+                System.out.println("Error writing to file. Decryption Failed");
+                outputFile.delete();
+                return false;
+            }
+        }
+
+        try {
+            outputWriter.close();
+        }
+        catch (IOException e) {
+            System.out.println("Unable to close outputWriter. Deleting decrypted file");
+            outputFile.delete();
+            return false;
+        }
+        keyScanner.close();
+        fileScanner.close();
+        System.out.println("Decryption Complete");
+        return true;
+    }
+
 }

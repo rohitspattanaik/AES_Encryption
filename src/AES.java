@@ -35,49 +35,21 @@ public class AES {
         if(flag.equals("e")) {
             System.out.println("Encrypting");
             encryptor = new Encryptor();
-            encryptor.addFiles(inputFile,keyFile);
+            encryptor.addFiles(inputFile, keyFile);
             if(!encryptor.encrypt()) {
                 System.out.println("Encryption failed");
             }
         }
+        if(flag.equals("d")) {
+            System.out.println("Decrypting");
+            decryptor = new Decryptor();
+            decryptor.addFiles(inputFile, keyFile);
+            if(!decryptor.decrypt()) {
+                System.out.println("Decryption failed");
+            }
+        }
 
 
-        /*testing code*/
-        //String temp = "193de3bea0f4e22b9ac68d2ae9f84808";
-
-        //String key = "2b7e151628aed2a6abf7158809cf4f3c";
-        //String temp = "3243f6a8885a308d313198a2e0370734";
-        //encryptor.addToKeyMatrix(key);
-        //encryptor.addToTextMatrix(temp);
-        //encryptor.encrypt();
-        /*
-        System.out.println();
-        encryptor.printKey();
-        encryptor.setRoundKeys();
-        System.out.println();
-        encryptor.printRoundKeys();
-        System.out.println();
-
-
-        encryptor.printState();
-        System.out.println();
-        encryptor.addRoundKey(0);
-        encryptor.printState();
-        System.out.println();
-        encryptor.subBytes();
-        encryptor.printState();
-        encryptor.shiftRows();
-        System.out.println();
-        encryptor.printState();
-        encryptor.mixColumns();
-        System.out.println();
-        encryptor.printState();
-        encryptor.addRoundKey(1);
-        System.out.println();
-        encryptor.printState();
-*/
-        //encryptor.printState();
-        /*end testing code*/
 
 
     }
