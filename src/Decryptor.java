@@ -8,6 +8,7 @@ public class Decryptor {
 
     private String input;
     private Scanner fileScanner;
+    private double inputSize = 0;
 
     private File outputFile;
     private String output;
@@ -70,7 +71,7 @@ public class Decryptor {
     }
 
     /*Opens files and returns success if scanners and writer opened*/
-    public boolean readFiles() {
+    private boolean readFiles() {
         File keyFile = new File(key);
         File inputFile = new File(input);
         outputFile = new File(output);
@@ -97,7 +98,7 @@ public class Decryptor {
     }
 
     /*Converts matrix into a string following a column major pattern*/
-    public String revertMatrix(int[][] matrix) {
+    private String revertMatrix(int[][] matrix) {
         String text = "";
         for(int col = 0; col < matrix[0].length; col++) {
             for(int row = 0; row < matrix.length; row++) {
@@ -114,7 +115,7 @@ public class Decryptor {
     }
 
     /*Inserts a given line into plainTextMatrix by column*/
-    public void addToCipherMatrix(String inputLine) {
+    private void addToCipherMatrix(String inputLine) {
         if(inputLine.length() < 32) {
             int diff = 32 - inputLine.length();
             String tempPad = "";
@@ -145,7 +146,7 @@ public class Decryptor {
     }
 
     /*Same as above except for keyMatrix*/
-    public void addToKeyMatrix(String inputLine) {
+    private void addToKeyMatrix(String inputLine) {
         if(inputLine.length() != 32) {
             outputFile.delete();
             assert false; //Panic! Cannot continue if here
@@ -165,7 +166,7 @@ public class Decryptor {
     }
 
     /*Rotates a given column of the matrix upwards*/
-    public void rotateCol(int col, int[][] matrix) {
+    private void rotateCol(int col, int[][] matrix) {
         int temp = matrix[0][col];
         int row = 1;
         while(row < matrix.length) {
@@ -175,7 +176,7 @@ public class Decryptor {
     }
 
     /*subBytesAux only used for roundkeys here. See inverseSubBytes otherwise*/
-    public void subBytesAux(int y, int[][] matrix) {
+    private void subBytesAux(int y, int[][] matrix) {
         for(int x = 0; x < matrix.length; x++) {
             String temp = Integer.toHexString(matrix[x][y]);
             if(temp.length() != 2) {
@@ -189,7 +190,7 @@ public class Decryptor {
     }
 
     /*Calculates all roundkeys and populates the matrix*/
-    public void setRoundKeys() {
+    private void setRoundKeys() {
         int row, col;
         for(col = 0; col < 4; col++) {
             for(row = 0; row < 4; row++) {
@@ -218,7 +219,7 @@ public class Decryptor {
     }
 
     /*Adds appropriate roundkey based on round*/
-    public void addRoundKey(int round) {
+    private void addRoundKey(int round) {
         //round = 10 - round;
         for(int col = 0; col < cipherTextMatrix[0].length; col++) {
             for(int row = 0; row < cipherTextMatrix.length; row++) {
@@ -228,7 +229,7 @@ public class Decryptor {
     }
 
     /*Calls rotateRow for each column*/
-    public void inverseShiftRows() {
+    private void inverseShiftRows() {
         for(int row = 0; row < cipherTextMatrix.length; row++) {
             for(int count = 0; count < row; count++) {
                 inverseRotateRow(row, cipherTextMatrix);
@@ -237,7 +238,7 @@ public class Decryptor {
     }
 
     /*Rotates a given row of the matrix to the left*/
-    public void inverseRotateRow(int row, int[][] matrix) {
+    private void inverseRotateRow(int row, int[][] matrix) {
         int temp = matrix[row][matrix.length - 1];
         int col = matrix.length - 2;
         while(col >= 0) {
@@ -247,7 +248,7 @@ public class Decryptor {
     }
 
     /*Substitutes elements in matrix using S_BOX in Tables*/
-    public void inverseSubBytes() {
+    private void inverseSubBytes() {
         for(int col = 0; col < cipherTextMatrix.length; col++) {
             inverseSubBytesAux(col, cipherTextMatrix);
         }
@@ -279,13 +280,13 @@ public class Decryptor {
             return 0;
     }
 
-    public void inverseMixColumns() {
+    private void inverseMixColumns() {
         for(int col = 0; col < cipherTextMatrix.length; col++) {
             inverseMixColumnsAux(col);
         }
     }
 
-    public void inverseMixColumnsAux (int c) {
+    private void inverseMixColumnsAux (int c) {
         int a[] = new int[4];
 
         // note that a is just a copy of st[.][c]
@@ -299,6 +300,7 @@ public class Decryptor {
     }
 
     public boolean decrypt() {
+        double time = System.currentTimeMillis();
         String key = keyScanner.next();
 //        if(keyScanner.hasNextLine()) {
 //            System.out.println("Error: More than one key found in key file. Aborting Encryption");
@@ -314,6 +316,7 @@ public class Decryptor {
         //printRoundKeys();
 
         while(fileScanner.hasNextLine()) {
+            inputSize += 16;
             String cipherText = fileScanner.nextLine();
             addToCipherMatrix(cipherText);
 
@@ -361,7 +364,14 @@ public class Decryptor {
         }
         keyScanner.close();
         fileScanner.close();
-        System.out.println("Decryption Complete");
+        time = System.currentTimeMillis() - time;
+        time /= 1000; //in seconds
+        System.out.println("Encryption Complete");
+        System.out.println("Bytes processed: " + inputSize);
+        System.out.println("Time taken (s): " + time);
+        inputSize /= (1024*1024);
+        double throughput = inputSize/time;
+        System.out.println("Throughput: " + throughput + "MB/s");
         return true;
     }
 
