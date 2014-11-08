@@ -289,7 +289,8 @@ public class Encryptor {
 
     /*Method called to allow encryption*/
     public boolean encrypt() {
-        double time = System.currentTimeMillis();
+        double time = 0;
+        double start = System.currentTimeMillis();
         String key = keyScanner.next();
 //        if(keyScanner.hasNextLine()) {
 //            System.out.println("Error: More than one key found in key file. Aborting Encryption");
@@ -301,10 +302,13 @@ public class Encryptor {
          }
         addToKeyMatrix(key);
         setRoundKeys();
+        time += System.currentTimeMillis() - start;
 
         while(fileScanner.hasNextLine()) {
+
             inputSize += 16;
             String plainText = fileScanner.nextLine();
+            start = System.currentTimeMillis();
             addToTextMatrix(plainText);
 
             addRoundKey(0);
@@ -323,6 +327,8 @@ public class Encryptor {
                 outputFile.delete();
                 return false;
             }
+
+            time += System.currentTimeMillis() - start;
         }
 
         try {
@@ -335,7 +341,7 @@ public class Encryptor {
         }
         keyScanner.close();
         fileScanner.close();
-        time = System.currentTimeMillis() - time;
+        //time = System.currentTimeMillis() - time;
         time /= 1000; //in seconds
         System.out.println("Encryption Complete");
         System.out.println("Bytes processed: " + inputSize);
